@@ -1,6 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startButton = document.getElementById('startButton');
+const highScoreListElement = document.getElementById('highScoreList');
 
 const gridSize = 20;
 let snake = [];
@@ -10,6 +11,7 @@ let gameSpeed = 150;
 let gameInterval;
 let gameOverFlag = false;
 let score = 0;
+let highScores = JSON.parse(localStorage.getItem('highScores') || '[]');
 
 function initGame() {
     snake = [{ x: 10, y: 10 }];
@@ -54,7 +56,7 @@ function drawFood() {
 }
 
 function drawScore() {
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = 'white';
     ctx.font = '20px Arial';
     ctx.textAlign = 'left';
     ctx.fillText('Score: ' + score, 10, 20);
@@ -114,7 +116,24 @@ function checkCollision() {
 function gameOver() {
     clearInterval(gameInterval);
     gameOverFlag = true;
+    updateHighScores();
     draw();
+}
+
+function updateHighScores() {
+    highScores.push(score);
+    highScores.sort((a, b) => b - a);
+    highScores = highScores.slice(0, 5);
+    localStorage.setItem('highScores', JSON.stringify(highScores));
+    displayHighScores();
+}
+
+function displayHighScores() {
+    if (highScoreListElement) {
+        highScoreListElement.innerHTML = '<h2>High Scores</h2><ol>' +
+            highScores.map(score => `<li>${score}</li>`).join('') +
+            '</ol>';
+    }
 }
 
 document.addEventListener('keydown', (e) => {
@@ -136,4 +155,7 @@ document.addEventListener('keydown', (e) => {
 
 startButton.addEventListener('click', () => {
     initGame();
+    displayHighScores();
 });
+
+displayHighScores();
