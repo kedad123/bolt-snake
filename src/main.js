@@ -1,21 +1,44 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startButton = document.getElementById('startButton');
-const overlay = document.getElementById('overlay');
-const gameOverText = document.getElementById('gameOverText');
 
 const gridSize = 20;
-let snake = [{ x: 10, y: 10 }];
-let food = { x: 15, y: 15 };
+let snake = [];
+let food = {};
 let direction = 'right';
 let gameSpeed = 150;
 let gameInterval;
-let gameStarted = false;
+let gameOverFlag = false;
+let score = 0;
+
+function initGame() {
+    snake = [{ x: 10, y: 10 }];
+    food = { x: 15, y: 15 };
+    direction = 'right';
+    gameOverFlag = false;
+    score = 0;
+    gameSpeed = 150;
+    if (gameInterval) {
+        clearInterval(gameInterval);
+    }
+    gameInterval = setInterval(() => {
+        update();
+        draw();
+    }, gameSpeed);
+}
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (gameOverFlag) {
+        ctx.fillStyle = 'black';
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
+        return;
+    }
     drawSnake();
     drawFood();
+    drawScore();
 }
 
 function drawSnake() {
@@ -30,9 +53,15 @@ function drawFood() {
     ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
 }
 
-function update() {
-    if (!gameStarted) return;
+function drawScore() {
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('Score: ' + score, 10, 20);
+}
 
+function update() {
+    if (gameOverFlag) return;
     const head = { ...snake[0] };
     switch (direction) {
         case 'up':
@@ -52,6 +81,13 @@ function update() {
     snake.unshift(head);
 
     if (head.x === food.x && head.y === food.y) {
+        score++;
+        gameSpeed -= 10;
+        clearInterval(gameInterval);
+        gameInterval = setInterval(() => {
+            update();
+            draw();
+        }, gameSpeed);
         food = {
             x: Math.floor(Math.random() * (canvas.width / gridSize)),
             y: Math.floor(Math.random() * (canvas.height / gridSize))
@@ -76,27 +112,12 @@ function checkCollision() {
 }
 
 function gameOver() {
-    gameStarted = false;
     clearInterval(gameInterval);
-    gameOverText.style.display = 'block';
-    overlay.style.display = 'flex';
-}
-
-function resetGame() {
-    snake = [{ x: 10, y: 10 }];
-    direction = 'right';
-    food = { x: 15, y: 15 };
-    gameOverText.style.display = 'none';
-    overlay.style.display = 'none';
-    gameStarted = true;
-    gameInterval = setInterval(() => {
-        update();
-        draw();
-    }, gameSpeed);
+    gameOverFlag = true;
+    draw();
 }
 
 document.addEventListener('keydown', (e) => {
-    if (!gameStarted) return;
     switch (e.key) {
         case 'ArrowUp':
             if (direction !== 'down') direction = 'up';
@@ -114,7 +135,5 @@ document.addEventListener('keydown', (e) => {
 });
 
 startButton.addEventListener('click', () => {
-    if (!gameStarted) {
-        resetGame();
-    }
+    initGame();
 });
