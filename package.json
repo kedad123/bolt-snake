@@ -1,7 +1,8 @@
 {
   "name": "snake",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite",
+    "build": "vite build"
   },
   "devDependencies": {
     "vite": "^4.2.0"
